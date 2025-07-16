@@ -444,17 +444,17 @@ public:
       //ofs[i].rdbuf()->pubsetbuf(ofs_bufs[i], BUFFER_BYTES);
       //ofs[i].rdbuf()->pubsetbuf(0, 0);
       if(_site_id[i].compare("null")) {
-	mfs[i].open(names[i] + ".usrp");
+	      mfs[i].open(names[i] + ".usrp");
       }
     }
 
     for(size_t i = 0; i < num_channels; i++) {
       if(_has_path2[i]) {
-	names2.push_back(_path_name2[i] + make_name(i, 0));
-	ofs2[i] = new buffered_ofstream();
-	ofs2[i]->resize(28);
-	ofs2[i]->open(names2[i]);
-	mfs2[i].open(names2[i] + ".usrp");
+        names2.push_back(_path_name2[i] + make_name(i, 0));
+        ofs2[i] = new buffered_ofstream();
+        ofs2[i]->resize(28);
+        ofs2[i]->open(names2[i]);
+        mfs2[i].open(names2[i] + ".usrp");
       }
     }
     //std::vector<boost::shared_ptr<muohio::cbuff_handler<type> > > cbh;
@@ -492,72 +492,75 @@ public:
       size_t num_received = stream->recv(buff_ptrs, _sample_rate_hz / 1000, md, 0.1, false);
       _ctr++;
       if(num_received != (_sample_rate_hz / 1000)) {
-	//std::cout << "Wrong number of bytes received" << std::endl;
+	    //std::cout << "Wrong number of bytes received" << std::endl;
       }
-      
       boost::mutex::scoped_lock lock(trigger_mutex);
       for(size_t i = 0; i < num_channels; ++i) {
-	if(_triggered) {
+	      if(_triggered) {
           if(_trigger_state_changed) {
             recording_start_ptime = ptm::second_clock::universal_time();
           }
-	  if(_write_meta and _site_id[i].compare("null")) {
+	        if(_write_meta and _site_id[i].compare("null")) {
             boost::chrono::high_resolution_clock::time_point pc_tp = boost::chrono::high_resolution_clock::now();
-	    boost::chrono::high_resolution_clock::duration pc_dur = pc_tp.time_since_epoch();
-	    double pc = double(pc_dur.count()) * boost::chrono::high_resolution_clock::period::num / double(boost::chrono::high_resolution_clock::period::den);
+	          boost::chrono::high_resolution_clock::duration pc_dur = pc_tp.time_since_epoch();
+	          double pc = double(pc_dur.count()) * boost::chrono::high_resolution_clock::period::num / double(boost::chrono::high_resolution_clock::period::den);
             muohio::mu_meta_t meta = muohio::mu_meta::get_meta(_ctr, md.time_spec.get_real_secs(), pc, int8_t(md.error_code));
-	    if(_site_id[i].compare("null")) {
-	      muohio::mu_meta::write(&mfs[i], meta);
-	    }
-	    if(_has_path2[i]) {
-	      muohio::mu_meta::write(&mfs2[i], meta);
-	    }
+	          if(_site_id[i].compare("null")) {
+	            muohio::mu_meta::write(&mfs[i], meta);
+	          }
+	          if(_has_path2[i]) {
+	            muohio::mu_meta::write(&mfs2[i], meta);
+	          }
           }
-	  ofs[i]->write(reinterpret_cast<char*>(&buffs[i].front()), sizeof(type) * _sample_rate_hz / 1000);
-	  if(_has_path2[i]) {
-	    ofs2[i]->write(reinterpret_cast<char*>(&buffs[i].front()), sizeof(type) * _sample_rate_hz / 1000);
-	  }
-	  //ofs[i].flush();
-	} else {
-	  if(_trigger_state_changed) {
-	    ptm::ptime recording_end_ptime(ptm::second_clock::universal_time());
+	        ofs[i]->write(reinterpret_cast<char*>(&buffs[i].front()), sizeof(type) * _sample_rate_hz / 1000);
+	        if(_has_path2[i]) {
+	          ofs2[i]->write(reinterpret_cast<char*>(&buffs[i].front()), sizeof(type) * _sample_rate_hz / 1000);
+	        }
+	      //ofs[i].flush();
+	      } else {
+	        if(_trigger_state_changed) {
+	        ptm::ptime recording_end_ptime(ptm::second_clock::universal_time());
     
-	    ofs[i]->close();
-	    if(_write_meta and _site_id[i].compare("null"))
-	      mfs[i].close();
-	    std::string name = _path_name[i] + make_name(i, (recording_end_ptime - recording_start_ptime).total_seconds(), recording_start_ptime);
-	    std::cout << "Renaming: " << names[i] << std::endl << "  to: " << name << std::endl;
-	    fs::rename(names[i], name);
-	    if(_write_meta and _site_id[i].compare("null"))
-	      fs::rename(names[i] + ".usrp", name + ".usrp");
-	    else
-	      fs::remove(names[i] + ".usrp");
+	        ofs[i]->close();
+	        if(_write_meta and _site_id[i].compare("null"))
+	          mfs[i].close();
+	        std::string name = _path_name[i] + make_name(i, (recording_end_ptime - recording_start_ptime).total_seconds(), recording_start_ptime);
+	        std::cout << "Renaming: " << names[i] << std::endl << "  to: " << name << std::endl;
+	        fs::rename(names[i], name);
+	        
+          if(_write_meta and _site_id[i].compare("null"))
+	          fs::rename(names[i] + ".usrp", name + ".usrp");
+	        else
+	          fs::remove(names[i] + ".usrp");
 	    
-	    names[i] = _path_name[i] + make_name(i, 0);
-	    ofs[i]->open(names[i]);
-	    if(_site_id[i].compare("null")) {
-	      mfs[i].open(names[i] + ".usrp");
-	    }
+	        names[i] = _path_name[i] + make_name(i, 0);
+	        ofs[i]->open(names[i]);
+	        if(_site_id[i].compare("null")) {
+	          mfs[i].open(names[i] + ".usrp");
+	        }
 
-	    if(_has_path2[i]) {
-	      ofs2[i]->close();
-	      if(_write_meta)
-		mfs2[i].close();
-	      std::string name = _path_name2[i] + make_name(i, (recording_end_ptime - recording_start_ptime).total_seconds(), recording_start_ptime);
-	      std::cout << "Renaming: " << names2[i] << std::endl << "  to: " << name << std::endl;
-	      fs::rename(names2[i], name);
-	      if(_write_meta)
-		fs::rename(names2[i] + ".usrp", name + ".usrp");
-	      else
-		fs::remove(names2[i] + ".usrp");
+	        if(_has_path2[i]) {
+	          ofs2[i]->close();
+	          if(_write_meta)
+		          mfs2[i].close();
+	          std::string name = _path_name2[i] + make_name(i, (recording_end_ptime - recording_start_ptime).total_seconds(), recording_start_ptime);
+	          std::cout << "Renaming: " << names2[i] << std::endl << "  to: " << name << std::endl;
+	          fs::rename(names2[i], name);
+	          if(_write_meta)
+		          fs::rename(names2[i] + ".usrp", name + ".usrp");
+	          else
+		          fs::remove(names2[i] + ".usrp");
 	      
-	      names2[i] = _path_name2[i] + make_name(i, 0);
-	      ofs2[i]->open(names2[i]);
-	      mfs2[i].open(names2[i] + ".usrp");
+            names2[i] = _path_name2[i] + make_name(i, 0);
+            ofs2[i]->open(names2[i]);
+            mfs2[i].open(names2[i] + ".usrp");
+	        }
+	      }
 	    }
-	  }
-	}
-	/*cbh[i]->push_array(&buffs[i]);
+    }
+      _trigger_state_changed = false;
+    }
+   	/*cbh[i]->push_array(&buffs[i]);
 	  if(_triggered and _trigger_state_changed) {
 	  cbh[i]->send_trigger_start();
 	  //_trigger_state_changed = false;
@@ -568,11 +571,7 @@ public:
 	  num_packets = 0;
 	  //_trigger_state_changed = false;
 	  }*/
-      }
-      _trigger_state_changed = false;
-      
-    }
-    
+
     std::cout << "Stop signal received, shutting down..." << std::endl;
     for(size_t i = 0; i < num_channels; ++i) {
       ofs[i]->close();
@@ -592,10 +591,8 @@ public:
 	fs::remove(names2[i] + ".usrp");
       }
     }
-    
     cmd.stream_mode = uhd::stream_cmd_t::STREAM_MODE_STOP_CONTINUOUS;
     stream->issue_stream_cmd(cmd);
-    
   }
 
 private:
