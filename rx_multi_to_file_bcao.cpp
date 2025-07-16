@@ -228,7 +228,7 @@ public:
     _usrp->set_rx_rate(_sample_rate_hz);
     for(size_t i = 0; i < _center_freq_hz.size(); ++i) {
       if(args.subdev[i].length()) {
-	_usrp->set_rx_subdev_spec(uhd::usrp::subdev_spec_t(args.subdev[i]), i);
+	      _usrp->set_rx_subdev_spec(uhd::usrp::subdev_spec_t(args.subdev[i]), i);
       }
       uhd::tune_request_t req(_center_freq_hz[i], _offset_freq_hz[i]);
       auto tune_res = _usrp->set_rx_freq(req, i);
@@ -238,8 +238,8 @@ public:
       
 #if UHD_VERSION >= 3100000
       if(args.lo_src[i].length()) {
-	_usrp->set_rx_lo_source(args.lo_src[i], uhd::usrp::multi_usrp::ALL_LOS, i);
-	_usrp->set_rx_lo_export_enabled(args.lo_export[i], uhd::usrp::multi_usrp::ALL_LOS, i);
+	      _usrp->set_rx_lo_source(args.lo_src[i], uhd::usrp::multi_usrp::ALL_LOS, i);
+	      _usrp->set_rx_lo_export_enabled(args.lo_export[i], uhd::usrp::multi_usrp::ALL_LOS, i);
       }
 #endif
       
@@ -254,8 +254,6 @@ public:
     } else {
       _usrp->set_time_now(uhd::time_spec_t(0.0));
     }
-
-    
   }
   uhd_cbuffer_multi(uhd_cbuffer_multi& other) :
     _usrp(other._usrp),
@@ -475,7 +473,6 @@ public:
     cmd.time_spec = uhd::time_spec_t(_usrp->get_time_now().get_real_secs() + 0.1);
     stream->issue_stream_cmd(cmd);
 
-
     uhd::rx_metadata_t md;
 
     std::cout << "Stream command sent, waiting for USRP to settle..." << std::endl;
@@ -519,45 +516,45 @@ public:
 	      //ofs[i].flush();
 	      } else {
 	        if(_trigger_state_changed) {
-	        ptm::ptime recording_end_ptime(ptm::second_clock::universal_time());
-    
-	        ofs[i]->close();
-	        if(_write_meta and _site_id[i].compare("null"))
-	          mfs[i].close();
-	        std::string name = _path_name[i] + make_name(i, (recording_end_ptime - recording_start_ptime).total_seconds(), recording_start_ptime);
-	        std::cout << "Renaming: " << names[i] << std::endl << "  to: " << name << std::endl;
-	        fs::rename(names[i], name);
-	        
-          if(_write_meta and _site_id[i].compare("null"))
-	          fs::rename(names[i] + ".usrp", name + ".usrp");
-	        else
-	          fs::remove(names[i] + ".usrp");
-	    
-	        names[i] = _path_name[i] + make_name(i, 0);
-	        ofs[i]->open(names[i]);
-	        if(_site_id[i].compare("null")) {
-	          mfs[i].open(names[i] + ".usrp");
-	        }
+            ptm::ptime recording_end_ptime(ptm::second_clock::universal_time());
+      
+            ofs[i]->close();
+            if(_write_meta and _site_id[i].compare("null"))
+              mfs[i].close();
+            std::string name = _path_name[i] + make_name(i, (recording_end_ptime - recording_start_ptime).total_seconds(), recording_start_ptime);
+            std::cout << "Renaming: " << names[i] << std::endl << "  to: " << name << std::endl;
+            fs::rename(names[i], name);
+            
+            if(_write_meta and _site_id[i].compare("null"))
+              fs::rename(names[i] + ".usrp", name + ".usrp");
+            else
+              fs::remove(names[i] + ".usrp");
+        
+            names[i] = _path_name[i] + make_name(i, 0);
+            ofs[i]->open(names[i]);
+            if(_site_id[i].compare("null")) {
+              mfs[i].open(names[i] + ".usrp");
+            }
 
-	        if(_has_path2[i]) {
-	          ofs2[i]->close();
-	          if(_write_meta)
-		          mfs2[i].close();
-	          std::string name = _path_name2[i] + make_name(i, (recording_end_ptime - recording_start_ptime).total_seconds(), recording_start_ptime);
-	          std::cout << "Renaming: " << names2[i] << std::endl << "  to: " << name << std::endl;
-	          fs::rename(names2[i], name);
-	          if(_write_meta)
-		          fs::rename(names2[i] + ".usrp", name + ".usrp");
-	          else
-		          fs::remove(names2[i] + ".usrp");
-	      
-            names2[i] = _path_name2[i] + make_name(i, 0);
-            ofs2[i]->open(names2[i]);
-            mfs2[i].open(names2[i] + ".usrp");
+            if(_has_path2[i]) {
+              ofs2[i]->close();
+              if(_write_meta)
+                mfs2[i].close();
+              std::string name = _path_name2[i] + make_name(i, (recording_end_ptime - recording_start_ptime).total_seconds(), recording_start_ptime);
+              std::cout << "Renaming: " << names2[i] << std::endl << "  to: " << name << std::endl;
+              fs::rename(names2[i], name);
+              if(_write_meta)
+                fs::rename(names2[i] + ".usrp", name + ".usrp");
+              else
+                fs::remove(names2[i] + ".usrp");
+          
+              names2[i] = _path_name2[i] + make_name(i, 0);
+              ofs2[i]->open(names2[i]);
+              mfs2[i].open(names2[i] + ".usrp");
+            }
 	        }
 	      }
-	    }
-    }
+      }
       _trigger_state_changed = false;
     }
    	/*cbh[i]->push_array(&buffs[i]);
@@ -577,44 +574,44 @@ public:
       ofs[i]->close();
       free(ofs_bufs[i]);
       if(_site_id[i].compare("null")) {
-	mfs[i].close();
-	fs::remove(names[i]);
-	fs::remove(names[i] + ".usrp");
+	      mfs[i].close();
+	      fs::remove(names[i]);
+	      fs::remove(names[i] + ".usrp");
       }
     }
 
     for(size_t i = 0; i < num_channels; ++i) {
       if(_has_path2[i]) {
-	ofs2[i]->close();
-	mfs2[i].close();
-	fs::remove(names2[i]);
-	fs::remove(names2[i] + ".usrp");
+        ofs2[i]->close();
+        mfs2[i].close();
+        fs::remove(names2[i]);
+        fs::remove(names2[i] + ".usrp");
       }
     }
     cmd.stream_mode = uhd::stream_cmd_t::STREAM_MODE_STOP_CONTINUOUS;
     stream->issue_stream_cmd(cmd);
   }
 
-private:
-  uhd::usrp::multi_usrp::sptr _usrp;
-  double _sample_rate_hz;
-  std::string _wirefmt;
-  std::vector<double> _center_freq_hz;
-  std::vector<double> _offset_freq_hz;
-  std::vector<std::string> _path_name;
-  std::vector<std::string> _path_name2;
-  std::vector<bool> _has_path2;
-  std::vector<std::string> _site_id;
-  std::string _extension;
-  std::string _type;
-  size_t _buffer_size;
-  unsigned long _min_free_bytes;
-  bool _write_meta;
-  std::string _peak;
-  bool _stop_signal_received;
-  bool _triggered, _trigger_state_changed;
-  uint32_t _ctr;
-  boost::mutex trigger_mutex;
+  private:
+    uhd::usrp::multi_usrp::sptr _usrp;
+    double _sample_rate_hz;
+    std::string _wirefmt;
+    std::vector<double> _center_freq_hz;
+    std::vector<double> _offset_freq_hz;
+    std::vector<std::string> _path_name;
+    std::vector<std::string> _path_name2;
+    std::vector<bool> _has_path2;
+    std::vector<std::string> _site_id;
+    std::string _extension;
+    std::string _type;
+    size_t _buffer_size;
+    unsigned long _min_free_bytes;
+    bool _write_meta;
+    std::string _peak;
+    bool _stop_signal_received;
+    bool _triggered, _trigger_state_changed;
+    uint32_t _ctr;
+    boost::mutex trigger_mutex;
 };
 
 struct shm_mtx {
