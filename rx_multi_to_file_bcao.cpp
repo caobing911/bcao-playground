@@ -743,9 +743,9 @@ int UHD_SAFE_MAIN(int argc, char *argv[]) {
       shm_mtx* stop_mutex = new (addr) shm_mtx;
       stop_mutex->start_stop = false;
       {
-	ipc::sharable_lock<ipc::interprocess_sharable_mutex> lock(stop_mutex->mutex);
-	stop_mutex->cond.notify_all();
-	stop_mutex->cond.notify_all();
+        ipc::sharable_lock<ipc::interprocess_sharable_mutex> lock(stop_mutex->mutex);
+        stop_mutex->cond.notify_all();
+        stop_mutex->cond.notify_all();
       }
       boost::this_thread::sleep_for(boost::chrono::seconds(5));
       stop();
@@ -778,17 +778,17 @@ int UHD_SAFE_MAIN(int argc, char *argv[]) {
   } else {
     while(running) {
       try {
-	ipc::shared_memory_object shm(ipc::open_only, "event_trigger", ipc::read_write);
-	ipc::mapped_region region(shm, ipc::read_write);
-	void* addr = region.get_address();
-	shm_mtx* trigger_mutex = new (addr) shm_mtx;
-	ipc::sharable_lock<ipc::interprocess_sharable_mutex> lock(trigger_mutex->mutex);
-	trigger_mutex->cond.wait(lock);
-	trigger(trigger_mutex->start_stop);
-	if(not running) break;
+        ipc::shared_memory_object shm(ipc::open_only, "event_trigger", ipc::read_write);
+        ipc::mapped_region region(shm, ipc::read_write);
+        void* addr = region.get_address();
+        shm_mtx* trigger_mutex = new (addr) shm_mtx;
+        ipc::sharable_lock<ipc::interprocess_sharable_mutex> lock(trigger_mutex->mutex);
+        trigger_mutex->cond.wait(lock);
+        trigger(trigger_mutex->start_stop);
+	      if(not running) break;
       } catch (ipc::interprocess_exception& e) {
-	std::cout << "Problem connecting to SHM..." << e.what() << std::endl;
-	boost::this_thread::sleep_for(boost::chrono::seconds(10));
+	      std::cout << "Problem connecting to SHM..." << e.what() << std::endl;
+	      boost::this_thread::sleep_for(boost::chrono::seconds(10));
       }
     }
   }
