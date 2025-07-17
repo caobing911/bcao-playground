@@ -103,6 +103,7 @@ public:
     pt::ptree tree;
     pt::xml_parser::read_xml(filename, tree);
     pt::ptree usrp_multi_nodes = tree.get_child("uhd");
+
     for(auto usrp_multi: usrp_multi_nodes) {
       if(not std::strncmp(usrp_multi.first.data(), "usrp_multi", 10)) {
         usrp_multi_args args;
@@ -188,6 +189,7 @@ public:
 	      _has_path2.push_back(false);
     }
     
+    // Ensure Output Paths Exist
     std::for_each(_path_name.begin(), _path_name.end(), [](std::string& p) {
     if(not fs::exists(p)) {
       std::cout << "Creating: " << p << std::endl;
@@ -198,29 +200,33 @@ public:
       }
 	  }
 
-	if(p.back() != '/') {
-	  p.push_back('/');
-	}
-      } );
+    if(p.back() != '/') {
+      p.push_back('/');
+    }
+
+    });
 
     if(_has_path2[0]) {
       std::for_each(_path_name2.begin(), _path_name2.end(), [](std::string& p) {
-	  if(not fs::exists(p)) {
-	    std::cout << "Creating: " << p << std::endl;
-	    fs::create_directories(p);
-	  } else {
-	    if(not fs::is_directory(p)) {
-	      std::cerr << "WARNING: " << p << " exists, but is not a directory." << std::endl;
+      if(not fs::exists(p)) {
+        std::cout << "Creating: " << p << std::endl;
+        fs::create_directories(p);
+      } else {
+        if(not fs::is_directory(p)) {
+          std::cerr << "WARNING: " << p << " exists, but is not a directory." << std::endl;
+        }
 	    }
-	  }
 
-	  if(p.back() != '/') {
-	    p.push_back('/');
-	  }
-	} );
+      if(p.back() != '/') {
+        p.push_back('/');
+      }
+      } );
     }
-    
+
+    // Creates a UHD USRP device using device arguments.
     _usrp = uhd::usrp::multi_usrp::make(uhd::device_addr_t(args.args));
+
+    // Sets clock and time synchronization (e.g., external, gpsdo, pps).
     _usrp->set_clock_source(args.osc_source);
     if(has_pps) {
       _usrp->set_time_source(args.time_source);
@@ -236,12 +242,12 @@ public:
       std::cout << "  RF PLL:  " << tune_res.actual_rf_freq << std::endl;
       std::cout << "  DSP PLL: " << tune_res.actual_dsp_freq << std::endl;
       
-#if UHD_VERSION >= 3100000
+      #if UHD_VERSION >= 3100000
       if(args.lo_src[i].length()) {
 	      _usrp->set_rx_lo_source(args.lo_src[i], uhd::usrp::multi_usrp::ALL_LOS, i);
 	      _usrp->set_rx_lo_export_enabled(args.lo_export[i], uhd::usrp::multi_usrp::ALL_LOS, i);
       }
-#endif
+      #endif
       
       _usrp->set_rx_antenna(args.antenna[i], i);
       _usrp->set_rx_gain(args.gain[i], i);
@@ -355,9 +361,9 @@ public:
     for(size_t i = 0; i < num_usrps; i++) {
       sensors = _usrp->get_rx_sensor_names(i);
       if(std::find(sensors.begin(), sensors.end(), "lo_locked") != sensors.end()) {
-	uhd::sensor_value_t lo_locked = _usrp->get_rx_sensor("lo_locked", i);
-	std::cout << boost::format("Checking RX %d: %s ...") % i % lo_locked.to_pp_string() << std::endl;
-	ret = ret && lo_locked.to_bool();
+	      uhd::sensor_value_t lo_locked = _usrp->get_rx_sensor("lo_locked", i);
+	      std::cout << boost::format("Checking RX %d: %s ...") % i % lo_locked.to_pp_string() << std::endl;
+	      ret = ret && lo_locked.to_bool();
       }
     }
     
