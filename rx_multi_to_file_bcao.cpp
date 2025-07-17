@@ -481,16 +481,16 @@ public:
 
     uhd::rx_metadata_t md;
 
+    // Warm-Up Phase (discard samples of the first blocks)
     std::cout << "Stream command sent, waiting for USRP to settle..." << std::endl;
-
     for(int i = 0; i < 1000; ++i) {
       stream->recv(buff_ptrs, _sample_rate_hz / 1000, md, 0.1, false);
     }
 
     std::cout << "Streaming data..." << std::endl;
-
     ptm::ptime recording_start_ptime;
 
+    // Main Data Streaming Loop
     while(not _stop_signal_received) {
       size_t num_received = stream->recv(buff_ptrs, _sample_rate_hz / 1000, md, 0.1, false);
       _ctr++;
